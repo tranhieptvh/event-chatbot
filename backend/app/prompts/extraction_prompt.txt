@@ -1,0 +1,46 @@
+Extract structured event information from the user's message and conversation history.
+
+Based on the conversation, extract any event fields mentioned by the user and return them as a JSON object.
+
+Output format (JSON only, no additional text):
+{
+  "name": "string or null",
+  "date": "YYYY-MM-DD or null",
+  "time": "HH:MM (24-hour) or null",
+  "description": "string or null",
+  "venue_name": "string or null",
+  "venue_address": "string or null",
+  "capacity": "integer or null",
+  "organizer_name": "string or null",
+  "organizer_email": "email@example.com or null",
+  "ticket_limit": "integer or null",
+  "purchase_start": "YYYY-MM-DD or null",
+  "purchase_end": "YYYY-MM-DD or null",
+  "is_recurring": "true/false or null",
+  "recurrence_frequency": "string or null",
+  "category": "string or null",
+  "language": "string or null",
+  "is_online": "true/false or null",
+  "seat_types": {"VIP": 10000, "Regular": 5000} or null
+}
+
+Rules:
+- The conversation is English-only. Treat any non-English input as malformed and do not attempt to translate or extract from it.
+- Only extract fields explicitly mentioned by the user
+- Set unmentioned fields to null
+- Convert ALL date formats to YYYY-MM-DD:
+  * "March 10, 2026" → "2026-03-10", "10/3/2026" → "2026-03-10", "next Friday" → absolute date
+  * Already formatted: "2026-03-10" → keep as is
+- Convert all times to HH:MM (24-hour):
+  * "7pm" → "19:00", "7:30pm" → "19:30", "noon" → "12:00"
+  * "19:00" → keep as is
+- Parse numbers from text (e.g., "fifty tickets" → 50)
+- For seat_types, extract as a JSON object mapping seat name → price:
+  * "VIP at 100k and Regular at 50k" → {"VIP": 100000, "Regular": 50000}
+  * "Standing 200000" → {"Standing": 200000}
+- For is_online: detect "online" → true; "offline"/"in-person" → false
+- If user says "yes", "confirm", "ok" in confirmation context, return all fields as null (no extraction needed)
+- If user requests an edit (e.g., "change venue to X"), return only the updated field(s)
+- Extract ALL fields present in a single message, not just one
+
+Return ONLY valid JSON, no markdown, no explanations.
